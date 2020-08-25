@@ -1,8 +1,8 @@
 <template>
-  <div class="login_container">
-    <div class="login_box">
+  <div class="login-container">
+    <div class="login-box">
       <!-- 头像 -->
-      <div class="avatar_box">
+      <div class="avatar-box">
         <img src="../assets/logo.png" alt="头像" />
       </div>
       <!-- 登录表单 -->
@@ -11,7 +11,7 @@
         ref="loginFormRef"
         :rules="loginFormRules"
         label-width="0px"
-        class="login_form"
+        class="login-form"
       >
         <!-- 用户名 -->
         <el-form-item prop="username">
@@ -83,12 +83,12 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.login_container {
+.login-container {
   background-color: #2b4b6b;
   height: 100%;
 }
 
-.login_box {
+.login-box {
   width: 450px;
   height: 300px;
   background-color: #fff;
@@ -99,7 +99,7 @@ export default {
   transform: translate(-50%, -50%);
 }
 
-.avatar_box {
+.avatar-box {
   width: 130px;
   height: 130px;
   border: 1px solid #eee;
@@ -119,7 +119,7 @@ export default {
   }
 }
 
-.login_form {
+.login-form {
   position: absolute;
   bottom: 0;
   padding: 0 20px;
