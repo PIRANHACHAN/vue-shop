@@ -30,7 +30,7 @@
         </el-form-item>
         <!-- 按钮 -->
         <el-form-item class="btns">
-          <el-button type="primary">登录</el-button>
+          <el-button type="primary" @click="handleLogin">登录</el-button>
           <el-button type="info" @click="handleResetLogin">重置</el-button>
         </el-form-item>
       </el-form>
@@ -43,8 +43,8 @@ export default {
   data() {
     return {
       loginForm: {
-        username: '',
-        password: '',
+        username: 'admin',
+        password: '123456',
       },
       loginFormRules: {
         username: [
@@ -65,6 +65,18 @@ export default {
   methods: {
     handleResetLogin() {
       this.$refs.loginFormRef.resetFields()
+    },
+    handleLogin() {
+      this.$refs.loginFormRef.validate(async (valid) => {
+        if (!valid) return
+        const { data: result } = await this.$http.post('login', this.loginForm)
+        if (result.meta.status !== 200) return this.$message.error('登录失败')
+        this.$message.success('登录成功')
+
+        console.log(result)
+        window.sessionStorage.setItem('token', result.data.token)
+        this.$router.push('/home')
+      })
     },
   },
 }
