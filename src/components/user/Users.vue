@@ -30,7 +30,7 @@
           </template>
         </el-table-column>
         <el-table-column label="操作" min-width="175">
-          <template>
+          <template slot-scope="scope">
             <el-row>
               <el-tooltip
                 :enterable="false"
@@ -39,7 +39,12 @@
                 effect="dark"
                 placement="top"
               >
-                <el-button icon="el-icon-edit" size="small" type="primary"></el-button>
+                <el-button
+                  @click="handleEditUserInfo(scope.row.id)"
+                  icon="el-icon-edit"
+                  size="small"
+                  type="primary"
+                ></el-button>
               </el-tooltip>
               <el-tooltip
                 :enterable="false"
@@ -109,6 +114,36 @@
       <span class="dialog-footer" slot="footer">
         <el-button @click="handleUserClickDialogReset">重置</el-button>
         <el-button @click="handleAddUser" type="primary">立即注册</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      :before-close="handleUserCloseDialog"
+      :close-on-click-modal="false"
+      :visible.sync="editDialogVisible"
+      title="修改用户信息"
+      width="40%"
+    >
+      <el-form
+        :model="editForm"
+        :rules="addFormRules"
+        label-width="90px"
+        ref="editFormRef"
+        status-icon
+      >
+        <el-form-item label="用户名">
+          <el-input disabled v-model="editForm.username"></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱地址" prop="email">
+          <el-input v-model="editForm.email"></el-input>
+        </el-form-item>
+        <el-form-item label="手机号码" prop="mobile">
+          <el-input v-model="editForm.mobile"></el-input>
+        </el-form-item>
+      </el-form>
+      <span class="dialog-footer" slot="footer">
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button @click="handleSubmitEditUserInfo" type="primary">提交修改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -192,6 +227,8 @@ export default {
           { validator: checkMobile, trigger: 'blur' },
         ],
       },
+      editDialogVisible: false,
+      editForm: {},
     }
   },
   created() {
@@ -232,7 +269,7 @@ export default {
     },
 
     handleUserCloseDialog(done) {
-      this.$confirm('确认关闭吗？关闭会清空数据')
+      this.$confirm('确认关闭吗？')
         .then((_) => {
           done()
         })
@@ -267,6 +304,26 @@ export default {
           this.addDialogVisible = false
           this.getUserList()
         })
+      })
+    },
+
+    handleEditUserInfo(id) {
+      this.$http.get(`users/${id}`).then((res) => {
+        const result = res.data
+        if (result.meta.status !== 200)
+          return this.$message.error('查询用户失败')
+        this.editForm = result.data
+        this.editDialogVisible = true
+      })
+    },
+    handleSubmitEditUserInfo() {
+      this.$http.put(`users/${this.editForm.id}`, this.editForm).then((res) => {
+        const result = res.data
+        if (result.meta.status !== 200)
+          return this.$message.error('修改用户失败')
+        this.editDialogVisible = false
+        this.$message.success('修改用户成功')
+        this.getUserList()
       })
     },
   },
