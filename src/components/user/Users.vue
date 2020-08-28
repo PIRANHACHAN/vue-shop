@@ -40,7 +40,7 @@
                 placement="top"
               >
                 <el-button
-                  @click="handleEditUserInfo(scope.row.id)"
+                  @click="getEditUserInfo(scope.row.id)"
                   icon="el-icon-edit"
                   size="small"
                   type="primary"
@@ -53,7 +53,12 @@
                 effect="dark"
                 placement="top"
               >
-                <el-button icon="el-icon-delete" size="small" type="danger"></el-button>
+                <el-button
+                  @click="handleDeleteUser(scope.row.id)"
+                  icon="el-icon-delete"
+                  size="small"
+                  type="danger"
+                ></el-button>
               </el-tooltip>
               <el-tooltip
                 :enterable="false"
@@ -81,10 +86,10 @@
     </el-card>
 
     <el-dialog
-      :before-close="handleUserCloseDialog"
+      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
       :visible.sync="addDialogVisible"
-      @close="handleUserCloseDialogReset"
+      @close="handleUserCloseAddDialogReset"
       title="添加用户"
       width="40%"
     >
@@ -112,15 +117,16 @@
         </el-form-item>
       </el-form>
       <span class="dialog-footer" slot="footer">
-        <el-button @click="handleUserClickDialogReset">重置</el-button>
-        <el-button @click="handleAddUser" type="primary">立即注册</el-button>
+        <el-button @click="handleUserClickResetAddDialog">重置</el-button>
+        <el-button @click="handleAddUser" type="primary">立即添加</el-button>
       </span>
     </el-dialog>
 
     <el-dialog
-      :before-close="handleUserCloseDialog"
+      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
       :visible.sync="editDialogVisible"
+      @close="handleUserCloseEditDialogReset"
       title="修改用户信息"
       width="40%"
     >
@@ -142,8 +148,7 @@
         </el-form-item>
       </el-form>
       <span class="dialog-footer" slot="footer">
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button @click="handleSubmitEditUserInfo" type="primary">提交修改</el-button>
+        <el-button @click="handleEditUser" type="primary">提交修改</el-button>
       </span>
     </el-dialog>
   </div>
@@ -282,7 +287,7 @@ export default {
         })
     },
 
-    handleUserCloseDialog(done) {
+    handleUserCloseDialogConfirm(done) {
       this.$confirm('确认关闭吗？')
         .then((_) => {
           done()
@@ -292,14 +297,14 @@ export default {
         })
     },
 
-    handleUserCloseDialogReset() {
+    handleUserCloseAddDialogReset() {
       this.$refs.addFormRef.resetFields()
     },
 
-    handleUserClickDialogReset() {
+    handleUserClickResetAddDialog() {
       this.$confirm('确认重置吗？')
         .then((_) => {
-          this.handleUserCloseDialogReset()
+          this.handleUserCloseAddDialogReset()
         })
         .catch((_) => {
           console.log('用户取消重置')
@@ -321,7 +326,11 @@ export default {
       })
     },
 
-    handleEditUserInfo(id) {
+    handleUserCloseEditDialogReset() {
+      this.$refs.editFormRef.resetFields()
+    },
+
+    getEditUserInfo(id) {
       this.$http.get(`users/${id}`).then((res) => {
         const result = res.data
         if (result.meta.status !== 200)
@@ -330,15 +339,44 @@ export default {
         this.editDialogVisible = true
       })
     },
-    handleSubmitEditUserInfo() {
-      this.$http.put(`users/${this.editForm.id}`, this.editForm).then((res) => {
-        const result = res.data
-        if (result.meta.status !== 200)
-          return this.$message.error('修改用户失败')
-        this.editDialogVisible = false
-        this.$message.success('修改用户成功')
-        this.getUserList()
+
+    handleEditUser() {
+      this.$refs.editFormRef.validate((valid) => {
+        if (!valid) return
+        this.$http
+          .put(`users/${this.editForm.id}`, {
+            email: this.editForm.email,
+            mobile: this.editForm.mobile,
+          })
+          .then((res) => {
+            const result = res.data
+            if (result.meta.status !== 200)
+              return this.$message.error('修改用户失败')
+            this.$message.success('修改用户成功')
+            this.editDialogVisible = false
+            this.getUserList()
+          })
       })
+    },
+
+    handleDeleteUser(id) {
+      this.$confirm('此操作将永久删除该用户，是否继续？', '删除提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          this.$http.delete(`users/${id}`).then((res) => {
+            const result = res.data
+            if (result.meta.status !== 200)
+              return this.$message.error('删除用户失败')
+            this.$message.success('删除用户成功')
+            this.getUserList()
+          })
+        })
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
     },
   },
 }
