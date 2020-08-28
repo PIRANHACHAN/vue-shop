@@ -25,7 +25,6 @@ import {
   Dialog,
   MessageBox,
   Tag,
-  Divider,
 } from 'element-ui'
 
 Vue.use(Button)
@@ -51,7 +50,6 @@ Vue.use(Tooltip)
 Vue.use(Pagination)
 Vue.use(Dialog)
 Vue.use(Tag)
-Vue.use(Divider)
 
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm
