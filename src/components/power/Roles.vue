@@ -75,7 +75,12 @@
                 size="small"
                 type="danger"
               >删除</el-button>
-              <el-button icon="el-icon-setting" size="small" type="warning">分配权限</el-button>
+              <el-button
+                @click="handleSetRights(scope.row)"
+                icon="el-icon-setting"
+                size="small"
+                type="warning"
+              >分配权限</el-button>
             </el-row>
           </template>
         </el-table-column>
@@ -135,6 +140,26 @@
         <el-button @click="handleEditRoles" type="primary">提交修改</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog
+      :visible.sync="setRightDialogVisible"
+      @close="handleCloseSetRightDialogReset"
+      title="分配角色权限"
+      width="40%"
+    >
+      <el-tree
+        :data="rightsList"
+        :default-checked-keys="defSelectKey"
+        :props="rightsTreeProps"
+        default-expand-all
+        node-key="id"
+        show-checkbox
+      ></el-tree>
+      <span class="dialog-footer" slot="footer">
+        <el-button @click="setRightDialogVisible = false">取 消</el-button>
+        <el-button @click="setRightDialogVisible = false" type="primary">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -166,6 +191,15 @@ export default {
           { min: 5, max: 20, message: '长度在5到20个字符', trigger: 'blur' },
         ],
       },
+
+      setRightDialogVisible: false,
+      rightsList: [],
+      rightsTreeProps: {
+        label: 'authName',
+        children: 'children',
+      },
+
+      defSelectKey: [],
     }
   },
   created() {
@@ -283,6 +317,30 @@ export default {
       this.$message.success('删除角色权限成功')
       // this.getRolesList()
       role.children = res.data
+    },
+
+    async handleSetRights(role) {
+      const { data: res } = await this.$http.get(`rights/tree`)
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取权限列表失败')
+      }
+      this.rightsList = res.data
+      this.getLeafKeys(role, this.defSelectKey)
+      this.setRightDialogVisible = true
+    },
+
+    // 递归方法找到第三层权限
+    getLeafKeys(node, arr) {
+      if (!node.children) {
+        return arr.push(node.id)
+      }
+      node.children.forEach((item) => {
+        this.getLeafKeys(item, arr)
+      })
+    },
+
+    handleCloseSetRightDialogReset() {
+      this.defSelectKey = []
     },
   },
 }
