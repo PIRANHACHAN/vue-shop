@@ -126,7 +126,7 @@
     >
       <el-form
         :model="editForm"
-        :rules="addFormRules"
+        :rules="editFormRules"
         label-width="90px"
         ref="editFormRef"
         status-icon
@@ -229,6 +229,20 @@ export default {
       },
       editDialogVisible: false,
       editForm: {},
+      editFormRules: {
+        email: [
+          {
+            required: true,
+            message: '请输入邮箱地址',
+            trigger: 'blur',
+          },
+          { validator: checkEmail, trigger: 'blur' },
+        ],
+        mobile: [
+          { required: true, message: '请输入手机号码', trigger: 'blur' },
+          { validator: checkMobile, trigger: 'blur' },
+        ],
+      },
     }
   },
   created() {
