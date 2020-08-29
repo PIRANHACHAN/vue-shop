@@ -189,11 +189,7 @@
 </template>
 
 <script>
-import Roles from '../power/Roles.vue'
 export default {
-  components: {
-    Roles,
-  },
   data() {
     let checkPassword = async (rule, value, callback) => {
       if (this.addForm.password !== '') {
