@@ -67,7 +67,12 @@
                 effect="dark"
                 placement="top"
               >
-                <el-button icon="el-icon-setting" size="small" type="warning"></el-button>
+                <el-button
+                  @click="getRolesList(scope.row)"
+                  icon="el-icon-setting"
+                  size="small"
+                  type="warning"
+                ></el-button>
               </el-tooltip>
             </el-row>
           </template>
@@ -151,11 +156,44 @@
         <el-button @click="handleEditUser" type="primary">提交修改</el-button>
       </span>
     </el-dialog>
+
+    <el-dialog
+      :close-on-click-modal="false"
+      :visible.sync="setUserRoleDialogVisible"
+      @close="handleCloseSetUserRoleDialogReset"
+      title="分配用户角色"
+      width="40%"
+    >
+      <div>
+        <p>当前用户：{{currentUserInfo.username}}</p>
+        <p>当前角色：{{currentUserInfo.role_name}}</p>
+        <p>
+          分配新角色：
+          <el-select placeholder="请选择" v-model="newRoleId">
+            <el-option
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+              v-for="item in rolesList"
+            ></el-option>
+          </el-select>
+        </p>
+      </div>
+
+      <span class="dialog-footer" slot="footer">
+        <el-button @click="setUserRoleDialogVisible = false">取 消</el-button>
+        <el-button @click="handleSetUserRole" type="primary">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import Roles from '../power/Roles.vue'
 export default {
+  components: {
+    Roles,
+  },
   data() {
     let checkPassword = async (rule, value, callback) => {
       if (this.addForm.password !== '') {
@@ -178,6 +216,7 @@ export default {
       }
       callback(new Error('请输入合法的邮箱地址'))
     }
+
     let checkMobile = (rule, value, callback) => {
       const regMobile = /^(13[0-9]|14[5|7]|15[0|1|2|3|4|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/
       if (regMobile.test(value)) {
@@ -248,6 +287,11 @@ export default {
           { validator: checkMobile, trigger: 'blur' },
         ],
       },
+      setUserRoleDialogVisible: false,
+      rolesList: [],
+      currentUserInfo: {},
+
+      newRoleId: '',
     }
   },
   created() {
@@ -377,6 +421,42 @@ export default {
         .catch(() => {
           this.$message.info('已取消删除')
         })
+    },
+
+    getRolesList(userinfo) {
+      this.currentUserInfo = userinfo
+      this.$http.get('roles').then((res) => {
+        const result = res.data
+        if (result.meta.status !== 200) {
+          return this.$message.error('获取角色列表失败')
+        }
+        this.rolesList = result.data
+        this.setUserRoleDialogVisible = true
+      })
+    },
+
+    handleSetUserRole() {
+      if (!this.newRoleId) {
+        return this.$message.error('请选择要分配的角色！')
+      }
+      this.$http
+        .put(`users/${this.currentUserInfo.id}/role`, {
+          rid: this.newRoleId,
+        })
+        .then((res) => {
+          const result = res.data
+          if (result.meta.status !== 200) {
+            return this.$message.error('分配用户角色失败')
+          }
+          this.$message.success('分配用户角色成功')
+          this.getUserList()
+          this.setUserRoleDialogVisible = false
+        })
+    },
+
+    handleCloseSetUserRoleDialogReset() {
+      this.newRoleId = ''
+      this.currentUserInfo = {}
     },
   },
 }
