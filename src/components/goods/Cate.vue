@@ -33,10 +33,18 @@
           <el-tag type="success" v-else-if="scope.row.cat_level === 1">二级</el-tag>
           <el-tag type="warning" v-else>三级</el-tag>
         </template>
-        <template slot="operate">
+        <template slot="operate" slot-scope="scope">
           <el-row>
-            <el-button icon="el-icon-edit" type="primary">编辑</el-button>
-            <el-button icon="el-icon-delete" type="danger">删除</el-button>
+            <el-button
+              @click="showEditGoodsCateDialog(scope.row.cat_id)"
+              icon="el-icon-edit"
+              type="primary"
+            >编辑</el-button>
+            <el-button
+              @click="handleDeleteGoodsCate(scope.row.cat_id)"
+              icon="el-icon-delete"
+              type="danger"
+            >删除</el-button>
           </el-row>
         </template>
       </tree-table>
@@ -56,12 +64,12 @@
       :visible.sync="addCateDialogVisible"
       @close="handleCateDialogClose"
       title="添加分类"
-      width="50%"
+      width="40%"
     >
       <el-form
         :model="addCateForm"
         :rules="addCateFormRules"
-        label-width="100px"
+        label-width="90px"
         ref="addCateFormRef"
         status-icon
       >
@@ -85,6 +93,29 @@
       <span class="dialog-footer" slot="footer">
         <el-button @click="addCateDialogVisible = false">取 消</el-button>
         <el-button @click="handleAddGoodsCate" type="primary">确 定</el-button>
+      </span>
+    </el-dialog>
+
+    <el-dialog
+      :visible.sync="editCateDialogVisible"
+      @close="handleEditDialogCloseReset"
+      title="编辑分类"
+      width="40%"
+    >
+      <el-form
+        :model="editCateForm"
+        :rules="editCateFormRules"
+        label-width="90px"
+        ref="editCateFormRef"
+        status-icon
+      >
+        <el-form-item label="分类名称" prop="cat_name">
+          <el-input v-model="editCateForm.cat_name"></el-input>
+        </el-form-item>
+      </el-form>
+      <span class="dialog-footer" slot="footer">
+        <el-button @click="editCateDialogVisible = false">取 消</el-button>
+        <el-button @click="handleEditGoodsCateName" type="primary">确 定</el-button>
       </span>
     </el-dialog>
   </div>
@@ -142,6 +173,14 @@ export default {
         children: 'children',
       },
       selectGoodsCateKeys: [],
+
+      editCateDialogVisible: false,
+      editCateForm: {},
+      editCateFormRules: {
+        cat_name: [
+          { required: true, message: '请输入分类名称', trigger: 'blur' },
+        ],
+      },
     }
   },
   created() {
@@ -206,7 +245,6 @@ export default {
     },
 
     handleAddGoodsCate() {
-      console.log(this.addCateForm)
       this.$refs.addCateFormRef.validate(async (valid) => {
         if (!valid) return
         const { data: res } = await this.$http.post(
@@ -228,6 +266,61 @@ export default {
       this.addCateForm.cat_pid = 0
       this.addCateForm.cat_level = 0
     },
+
+    showEditGoodsCateDialog(id) {
+      this.getThisCateInfo(id)
+      this.editCateDialogVisible = true
+    },
+
+    async getThisCateInfo(id) {
+      const { data: res } = await this.$http.get(`categories/${id}`)
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取商品分类信息失败')
+      }
+      this.editCateForm = res.data
+    },
+
+    handleEditDialogCloseReset() {
+      this.$refs.editCateFormRef.resetFields()
+    },
+
+    handleEditGoodsCateName() {
+      this.$refs.editCateFormRef.validate(async (valid) => {
+        if (!valid) return
+        const { data: res } = await this.$http.put(
+          `categories/${this.editCateForm.cat_id}`,
+          {
+            cat_name: this.editCateForm.cat_name,
+          }
+        )
+        if (res.meta.status !== 200) {
+          return this.$message.error('修改分类名称失败')
+        }
+        this.$message.success('修改分类名称成功')
+        this.getGoodsCateList()
+        this.editCateDialogVisible = false
+      })
+    },
+
+    handleDeleteGoodsCate(id) {
+      this.$confirm('此操作将会删除该分类，是否继续？', '删除提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          this.$http.delete(`categories/${id}`).then((res) => {
+            const result = res.data
+            if (result.meta.msg === '删除失败')
+              return this.$message.error('删除商品分类失败')
+            this.$message.success('删除商品分类成功')
+            this.getGoodsCateList()
+          })
+        })
+        .catch(() => {
+          this.$message.info('已取消删除')
+        })
+    },
   },
 }
 </script>
@@ -240,4 +333,4 @@ export default {
 .el-cascader {
   width: 100%;
 }
-</style>
+</style> 
