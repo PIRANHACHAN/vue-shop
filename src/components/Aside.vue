@@ -1,22 +1,22 @@
 <template>
   <el-menu
-    background-color="#333744"
-    text-color="#fff"
-    active-text-color="#4b9bff"
-    unique-opened
-    router
     :default-active="activePath"
+    active-text-color="#4b9bff"
+    background-color="#333744"
+    router
+    text-color="#fff"
+    unique-opened
   >
-    <el-submenu :index="item.id + ''" v-for="item in menuList" :key="item.id">
+    <el-submenu :index="item.id + ''" :key="item.id" v-for="item in menuList">
       <template slot="title">
         <i :class="menuIconsList[item.id]"></i>
         <span>{{ item.authName }}</span>
       </template>
       <el-menu-item
         :index="'/' + childItem.path"
-        v-for="childItem in item.children"
         :key="childItem.id"
         @click="saveNavState('/' + childItem.path)"
+        v-for="childItem in item.children"
       >
         <template slot="title">
           <i class="el-icon-menu"></i>
