@@ -16,7 +16,11 @@
             placeholder="请输入搜索内容"
             v-model="queryInfo.query"
           >
-            <el-button @click="getGoodsList" icon="el-icon-search" slot="append"></el-button>
+            <el-button
+              @click="getGoodsList"
+              icon="el-icon-search"
+              slot="append"
+            ></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
@@ -25,16 +29,42 @@
       </el-row>
 
       <el-table :data="goodsList" border stripe>
-        <el-table-column align="center" label="#" type="index"></el-table-column>
+        <el-table-column
+          align="center"
+          label="#"
+          type="index"
+        ></el-table-column>
         <el-table-column label="商品名称" prop="goods_name"></el-table-column>
-        <el-table-column align="center" label="商品价格(元)" prop="goods_price" width="105px"></el-table-column>
-        <el-table-column align="center" label="商品重量" prop="goods_weight" width="85px"></el-table-column>
-        <el-table-column align="center" label="创建时间" prop="add_time" width="160px">
-          <template slot-scope="scope">{{scope.row.add_time|dateFormat}}</template>
+        <el-table-column
+          align="center"
+          label="商品价格(元)"
+          prop="goods_price"
+          width="105px"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          label="商品重量"
+          prop="goods_weight"
+          width="85px"
+        ></el-table-column>
+        <el-table-column
+          align="center"
+          label="创建时间"
+          prop="add_time"
+          width="160px"
+        >
+          <template slot-scope="scope">{{
+            scope.row.add_time | dateFormat
+          }}</template>
         </el-table-column>
         <el-table-column align="center" label="操作" width="130px">
           <template slot-scope="scope">
-            <el-button icon="el-icon-edit" size="small" type="primary"></el-button>
+            <el-button
+              icon="el-icon-edit"
+              size="small"
+              type="primary"
+              @click="handleEditGoods"
+            ></el-button>
             <el-button
               @click="handleDeleteGoods(scope.row.goods_id)"
               icon="el-icon-delete"
@@ -91,13 +121,7 @@ export default {
     goAddPage() {
       this.$router.push('goods/add')
     },
-    /**
-     *
-     *
-     *
-     *
-     *
-     */
+
     async handleDeleteGoods(id) {
       const result = await this.$confirm(
         '此操作会删除商品，是否继续？',
@@ -120,6 +144,10 @@ export default {
       }
     },
 
+    handleEditGoods() {
+      window.alert('该功能尚未完成！')
+    },
+
     handleCurrentPageChange(newPage) {
       this.queryInfo.pagenum = newPage
       this.getGoodsList()
@@ -132,5 +160,4 @@ export default {
 }
 </script>
 
-<style lang="less" scoped>
-</style>
+<style lang="less" scoped></style>
