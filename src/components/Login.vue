@@ -61,6 +61,7 @@ export default {
         if (res.meta.status !== 200) return this.$message.error('登录失败')
         this.$message.success('登录成功')
         window.sessionStorage.setItem('token', res.data.token)
+        window.sessionStorage.setItem('username', res.data.username)
         this.$router.push('/home')
       })
     },
@@ -70,7 +71,7 @@ export default {
 
 <style lang="less" scoped>
 .login-container {
-  background-color: #2b4b6b;
+  background-color: #2d3436;
   height: 100%;
 }
 
@@ -91,7 +92,7 @@ export default {
   border: 1px solid #eee;
   border-radius: 50%;
   padding: 10px;
-  box-shadow: 0 0 10px;
+  box-shadow: 0 0 10px #ddd;
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
