@@ -225,7 +225,7 @@ export default {
       queryInfo: {
         query: '',
         pagenum: 1,
-        pagesize: 2,
+        pagesize: 4,
       },
       userList: [],
       total: 0,
