@@ -34,11 +34,11 @@ export default {
     return {
       menuList: [],
       menuIconsList: {
-        '125': 'el-icon-s-custom',
-        '103': 'el-icon-s-tools',
-        '101': 'el-icon-s-goods',
-        '102': 'el-icon-s-order',
-        '145': 'el-icon-s-data',
+        125: 'el-icon-s-custom',
+        103: 'el-icon-s-tools',
+        101: 'el-icon-s-goods',
+        102: 'el-icon-s-order',
+        145: 'el-icon-s-data',
       },
       activePath: '',
     }
@@ -49,10 +49,9 @@ export default {
   },
   methods: {
     async getMenuList() {
-      const { data: result } = await this.$http.get('menus')
-      if (result.meta.status !== 200)
-        return this.$message.error(result.meta.msg)
-      this.menuList = result.data
+      const { data: res } = await this.$http.get('menus')
+      if (res.meta.status !== 200) return this.$message.error(res.meta.msg)
+      this.menuList = res.data
     },
     saveNavState(activePath) {
       window.sessionStorage.setItem('activePath', activePath)
