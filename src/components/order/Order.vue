@@ -8,6 +8,7 @@
 
     <el-card>
       <el-row>
+        <!-- 此处后端接口未完成 -->
         <el-col :span="9">
           <el-input
             @clear="getOrdersList"
@@ -16,64 +17,55 @@
             placeholder="请输入搜索内容"
             v-model="queryInfo.query"
           >
-            <el-button
-              @click="getOrdersList"
-              icon="el-icon-search"
-              slot="append"
-            ></el-button>
+            <el-button @click="getOrdersList" icon="el-icon-search" slot="append"></el-button>
           </el-input>
         </el-col>
       </el-row>
 
-      <el-table :data="orderList" stripe border>
+      <el-table :data="orderList" border stripe>
         <el-table-column label="#" type="index"></el-table-column>
         <el-table-column label="订单编号" prop="order_number"></el-table-column>
         <el-table-column label="订单价格" prop="order_price"></el-table-column>
         <el-table-column label="是否付款" prop="pay_status">
           <template slot-scope="scope">
-            <el-tag type="success" v-if="scope.row.pay_status === '1'"
-              >已付款</el-tag
-            >
+            <el-tag type="success" v-if="scope.row.pay_status === '1'">已付款</el-tag>
             <el-tag type="danger" v-else>未付款</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="是否发货">
-          <template slot-scope="scope">
-            {{ scope.row.is_send }}
-          </template>
+          <template slot-scope="scope">{{ scope.row.is_send }}</template>
         </el-table-column>
         <el-table-column label="下单时间">
-          <template slot-scope="scope">
-            {{ scope.row.create_time | dateFormat }}
-          </template>
+          <template slot-scope="scope">{{ scope.row.create_time | dateFormat }}</template>
         </el-table-column>
         <el-table-column label="操作">
           <template>
             <el-tooltip
               :enterable="false"
               class="item"
-              effect="dark"
               content="修改收货地址"
+              effect="dark"
               placement="top"
             >
               <el-button
                 @click="showEditAddressVisible"
+                icon="el-icon-edit"
                 size="small"
                 type="primary"
-                icon="el-icon-edit"
               ></el-button>
             </el-tooltip>
             <el-tooltip
               :enterable="false"
               class="item"
-              effect="dark"
               content="查询物流信息"
+              effect="dark"
               placement="top"
             >
               <el-button
+                @click="showCheckGoodsProgress"
+                icon="el-icon-location"
                 size="small"
                 type="success"
-                icon="el-icon-location"
               ></el-button>
             </el-tooltip>
           </template>
@@ -93,35 +85,45 @@
     </el-card>
 
     <el-dialog
+      :visible.sync="addressVisible"
       @close="handleAddressDialogCloseReset"
       title="修改收货地址"
-      :visible.sync="addressVisible"
       width="40%"
     >
       <el-form
-        status-icon
         :model="addressForm"
         :rules="addressFormRules"
-        ref="addressFormRef"
         label-width="90px"
+        ref="addressFormRef"
+        status-icon
       >
         <el-form-item label="省市区/县" prop="publiCity">
           <el-cascader
-            filterable
-            clearable
-            v-model="addressForm.publiCity"
             :options="cityData"
             :props="{ expandTrigger: 'hover' }"
+            clearable
+            filterable
+            v-model="addressForm.publiCity"
           ></el-cascader>
         </el-form-item>
         <el-form-item label="详细地址" prop="detailed">
           <el-input clearable v-model="addressForm.detailed"></el-input>
         </el-form-item>
       </el-form>
-      <span slot="footer" class="dialog-footer">
+      <span class="dialog-footer" slot="footer">
         <el-button @click="addressVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handleEditAddress">确 定</el-button>
+        <el-button @click="handleEditAddress" type="primary">确 定</el-button>
       </span>
+    </el-dialog>
+
+    <el-dialog :visible.sync="progressVisible" class="goods-progress" title="查询物流信息" width="40%">
+      <el-timeline :reverse="false">
+        <el-timeline-item
+          :key="i"
+          :timestamp="val.ftime"
+          v-for="(val, i) in progressData"
+        >{{val.context}}</el-timeline-item>
+      </el-timeline>
     </el-dialog>
   </div>
 </template>
@@ -152,6 +154,8 @@ export default {
           { required: true, message: '请输入详细地址', trigger: 'blur' },
         ],
       },
+      progressVisible: false,
+      progressData: [],
     }
   },
   created() {
@@ -183,12 +187,23 @@ export default {
       this.addressVisible = true
     },
 
+    // 此处后端接口未完成，无法提交
     handleEditAddress() {
       console.log(this.addressForm)
+      this.addressVisible = false
     },
 
     handleAddressDialogCloseReset() {
       this.$refs.addressFormRef.resetFields()
+    },
+
+    async showCheckGoodsProgress() {
+      const { data: res } = await this.$http.get(`kuaidi/1106975712662`)
+      if (res.meta.status !== 200) {
+        return this.$message.error('获取物流信息失败！')
+      }
+      this.progressData = res.data
+      this.progressVisible = true
     },
   },
 }
