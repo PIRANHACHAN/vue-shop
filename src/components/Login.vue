@@ -1,37 +1,25 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <!-- 头像 -->
       <div class="avatar-box">
-        <img src="../assets/logo.png" alt="头像" />
+        <img alt="头像" src="../assets/logo.png" />
       </div>
-      <!-- 登录表单 -->
       <el-form
         :model="loginForm"
-        ref="loginFormRef"
         :rules="loginFormRules"
-        label-width="0px"
         class="login-form"
+        label-width="0px"
+        ref="loginFormRef"
       >
-        <!-- 用户名 -->
         <el-form-item prop="username">
-          <el-input
-            v-model="loginForm.username"
-            prefix-icon="el-icon-user"
-          ></el-input>
+          <el-input prefix-icon="el-icon-user" v-model="loginForm.username"></el-input>
         </el-form-item>
-        <!-- 密码 -->
         <el-form-item prop="password">
-          <el-input
-            v-model="loginForm.password"
-            prefix-icon="el-icon-lock"
-            type="password"
-          ></el-input>
+          <el-input prefix-icon="el-icon-lock" type="password" v-model="loginForm.password"></el-input>
         </el-form-item>
-        <!-- 按钮 -->
         <el-form-item class="btns">
-          <el-button type="primary" @click="handleLogin">登录</el-button>
-          <el-button type="info" @click="handleResetLogin">重置</el-button>
+          <el-button @click="handleLogin" type="primary">登录</el-button>
+          <el-button @click="handleResetLogin" type="info">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -69,12 +57,10 @@ export default {
     handleLogin() {
       this.$refs.loginFormRef.validate(async (valid) => {
         if (!valid) return
-        const { data: result } = await this.$http.post('login', this.loginForm)
-        if (result.meta.status !== 200) return this.$message.error('登录失败')
+        const { data: res } = await this.$http.post('login', this.loginForm)
+        if (res.meta.status !== 200) return this.$message.error('登录失败')
         this.$message.success('登录成功')
-
-        console.log(result)
-        window.sessionStorage.setItem('token', result.data.token)
+        window.sessionStorage.setItem('token', res.data.token)
         this.$router.push('/home')
       })
     },
