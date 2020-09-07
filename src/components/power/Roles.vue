@@ -227,9 +227,7 @@ export default {
         .then((_) => {
           done()
         })
-        .catch((_) => {
-          console.log('用户取消关闭')
-        })
+        .catch((_) => {})
     },
 
     handleUserCloseAddDialogReset() {

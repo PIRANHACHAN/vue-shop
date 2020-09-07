@@ -189,7 +189,6 @@ export default {
 
     // 此处后端接口未完成，无法提交
     handleEditAddress() {
-      console.log(this.addressForm)
       this.addressVisible = false
     },
 

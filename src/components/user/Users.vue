@@ -332,9 +332,7 @@ export default {
         .then((_) => {
           done()
         })
-        .catch((_) => {
-          console.log('用户取消关闭')
-        })
+        .catch((_) => {})
     },
 
     handleUserCloseAddDialogReset() {
@@ -346,9 +344,7 @@ export default {
         .then((_) => {
           this.handleUserCloseAddDialogReset()
         })
-        .catch((_) => {
-          console.log('用户取消重置')
-        })
+        .catch((_) => {})
     },
 
     handleAddUser() {
