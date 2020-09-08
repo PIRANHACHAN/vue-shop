@@ -4,15 +4,18 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  min-width: 1366px;
 }
 
-.el-breadcrumb {
-  margin-bottom: 15px;
-  font-size: 12px;
+a {
+  text-decoration: none;
 }
 
-.el-table {
+.el-card {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.15) !important;
+}
+
+.el-table,
+.tree-table {
   margin-top: 15px;
 }
 
@@ -52,4 +55,13 @@ body,
 
 .ql-editor {
   min-height: 300px;
+}
+
+.el-breadcrumb__inner a,
+.el-breadcrumb__inner.is-link {
+  font-weight: normal;
+}
+
+.el-breadcrumb__item:last-child .el-breadcrumb__inner {
+  color: #97a8be;
 }

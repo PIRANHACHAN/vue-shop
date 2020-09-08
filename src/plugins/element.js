@@ -12,6 +12,9 @@ import {
   Menu,
   Submenu,
   MenuItem,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem,
   Breadcrumb,
   BreadcrumbItem,
   Card,
@@ -80,6 +83,9 @@ Vue.use(Upload)
 Vue.use(Timeline)
 Vue.use(TimelineItem)
 Vue.use(Calendar)
+Vue.use(Dropdown)
+Vue.use(DropdownMenu)
+Vue.use(DropdownItem)
 
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm
