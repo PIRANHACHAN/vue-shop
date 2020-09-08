@@ -3,27 +3,33 @@
     <el-card>
       <el-row :gutter="10">
         <el-col :span="9">
-          <el-input @clear="getUserList" clearable placeholder="请输入搜索内容" v-model="queryInfo.query">
+          <el-input
+            @clear="getUserList"
+            @keyup.enter.native="getUserList"
+            clearable
+            placeholder="输入用户名进行搜索"
+            v-model="queryInfo.query"
+          >
             <el-button @click="getUserList" icon="el-icon-search" slot="append"></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button @click="addDialogVisible=true" type="primary">添加用户</el-button>
+          <el-button @click="openAddUserDialog" type="primary">添加用户</el-button>
         </el-col>
       </el-row>
 
       <el-table :data="userList" border stripe style="width: 100%">
         <el-table-column label="#" type="index"></el-table-column>
-        <el-table-column label="姓名" prop="username" width="180"></el-table-column>
-        <el-table-column label="邮箱" prop="email" width="180"></el-table-column>
+        <el-table-column label="姓名" prop="username"></el-table-column>
+        <el-table-column label="邮箱" prop="email"></el-table-column>
         <el-table-column label="电话" prop="mobile"></el-table-column>
         <el-table-column label="角色" prop="role_name"></el-table-column>
-        <el-table-column label="状态">
+        <el-table-column label="状态" width="70">
           <template slot-scope="scope">
             <el-switch @change="handleUserStateChange(scope.row)" v-model="scope.row.mg_state"></el-switch>
           </template>
         </el-table-column>
-        <el-table-column label="操作" min-width="175">
+        <el-table-column label="操作" width="180">
           <template slot-scope="scope">
             <el-row>
               <el-tooltip
@@ -34,7 +40,7 @@
                 placement="top"
               >
                 <el-button
-                  @click="getEditUserInfo(scope.row.id)"
+                  @click="openEditUserDialog(scope.row.id)"
                   icon="el-icon-edit"
                   size="small"
                   type="primary"
@@ -85,69 +91,38 @@
     </el-card>
 
     <el-dialog
-      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
-      :visible.sync="addDialogVisible"
-      @close="handleUserCloseAddDialogReset"
-      title="添加用户"
+      :title="id === 1 ? '添加用户' : '编辑用户'"
+      :visible.sync="userDialogVisible"
+      @close="resetUserDialogWhenClosed"
       width="40%"
     >
       <el-form
-        :model="addForm"
-        :rules="addFormRules"
+        :model="userForm"
+        :rules="id === 1 ? addUserFormRules : editUserFormRules"
         label-width="90px"
-        ref="addFormRef"
+        ref="userFormRef"
         status-icon
       >
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="addForm.username"></el-input>
+          <el-input :disabled="id === 2" v-model="userForm.username"></el-input>
         </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input type="password" v-model="addForm.password"></el-input>
+        <el-form-item label="密码" prop="password" v-if="id === 1">
+          <el-input type="password" v-model="userForm.password"></el-input>
         </el-form-item>
-        <el-form-item label="确认密码" prop="checkpassword">
-          <el-input type="password" v-model="addForm.checkpassword"></el-input>
+        <el-form-item label="确认密码" prop="checkpassword" v-if="id === 1">
+          <el-input type="password" v-model="userForm.checkpassword"></el-input>
         </el-form-item>
         <el-form-item label="邮箱地址" prop="email">
-          <el-input v-model="addForm.email"></el-input>
+          <el-input v-model="userForm.email"></el-input>
         </el-form-item>
         <el-form-item label="手机号码" prop="mobile">
-          <el-input v-model="addForm.mobile"></el-input>
+          <el-input v-model="userForm.mobile"></el-input>
         </el-form-item>
       </el-form>
       <span class="dialog-footer" slot="footer">
-        <el-button @click="handleUserClickResetAddDialog">重置</el-button>
-        <el-button @click="handleAddUser" type="primary">立即添加</el-button>
-      </span>
-    </el-dialog>
-
-    <el-dialog
-      :before-close="handleUserCloseDialogConfirm"
-      :close-on-click-modal="false"
-      :visible.sync="editDialogVisible"
-      @close="handleUserCloseEditDialogReset"
-      title="修改用户信息"
-      width="40%"
-    >
-      <el-form
-        :model="editForm"
-        :rules="editFormRules"
-        label-width="90px"
-        ref="editFormRef"
-        status-icon
-      >
-        <el-form-item label="用户名">
-          <el-input disabled v-model="editForm.username"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱地址" prop="email">
-          <el-input v-model="editForm.email"></el-input>
-        </el-form-item>
-        <el-form-item label="手机号码" prop="mobile">
-          <el-input v-model="editForm.mobile"></el-input>
-        </el-form-item>
-      </el-form>
-      <span class="dialog-footer" slot="footer">
-        <el-button @click="handleEditUser" type="primary">提交修改</el-button>
+        <el-button @click="userDialogVisible = false">取消</el-button>
+        <el-button @click="addOrEditUser" type="primary">确定</el-button>
       </span>
     </el-dialog>
 
@@ -159,8 +134,8 @@
       width="40%"
     >
       <div>
-        <p>当前用户：{{currentUserInfo.username}}</p>
-        <p>当前角色：{{currentUserInfo.role_name}}</p>
+        <p>当前用户：{{ currentUserInfo.username }}</p>
+        <p>当前角色：{{ currentUserInfo.role_name }}</p>
         <p>
           分配新角色：
           <el-select placeholder="请选择" v-model="newRoleId">
@@ -196,14 +171,14 @@ import { getRolesList } from '@/api/rights.js'
 export default {
   data() {
     let checkPassword = async (rule, value, callback) => {
-      if (this.addForm.password !== '') {
-        await this.$refs.addFormRef.validateField('password')
+      if (this.userForm.password !== '') {
+        await this.$refs.userFormRef.validateField('password')
       }
       return callback()
     }
 
     let checkPassword2 = (rule, value, callback) => {
-      if (value !== this.addForm.password) {
+      if (value !== this.userForm.password) {
         return callback(new Error('两次输入密码不一致，请重新输入！'))
       }
       return callback()
@@ -233,19 +208,23 @@ export default {
       },
       userList: [],
       total: 0,
-      addDialogVisible: false,
-      addForm: {
+
+      id: 0, // 1--添加用户，2--编辑用户
+      userDialogVisible: false,
+      userForm: {
+        id: '',
         username: '',
         password: '',
+        checkpassword: '',
         email: '',
         mobile: '',
       },
-      addFormRules: {
+      addUserFormRules: {
         username: [
           { required: true, message: '请输入用户名', trigger: 'blur' },
         ],
         password: [
-          { required: false, message: '请输入密码', trigger: 'blur' },
+          { required: true, message: '请输入密码', trigger: 'blur' },
           {
             min: 6,
             max: 15,
@@ -255,25 +234,23 @@ export default {
           { validator: checkPassword, trigger: 'blur' },
         ],
         checkpassword: [
-          { required: false, message: '请再次输入密码', trigger: 'blur' },
+          { required: true, message: '请再次输入密码', trigger: 'blur' },
           { validator: checkPassword2, trigger: 'blur' },
         ],
         email: [
           {
-            required: false,
+            required: true,
             message: '请输入邮箱地址',
             trigger: 'blur',
           },
           { validator: checkEmail, trigger: 'blur' },
         ],
         mobile: [
-          { required: false, message: '请输入手机号码', trigger: 'blur' },
+          { required: true, message: '请输入手机号码', trigger: 'blur' },
           { validator: checkMobile, trigger: 'blur' },
         ],
       },
-      editDialogVisible: false,
-      editForm: {},
-      editFormRules: {
+      editUserFormRules: {
         email: [
           {
             required: true,
@@ -324,59 +301,64 @@ export default {
       })
     },
 
-    handleUserCloseDialogConfirm(done) {
-      this.$confirm('确认关闭吗？')
-        .then((_) => {
-          done()
-        })
-        .catch((_) => {})
+    resetUserDialogWhenClosed() {
+      this.$refs.userFormRef.resetFields()
     },
 
-    handleUserCloseAddDialogReset() {
-      this.$refs.addFormRef.resetFields()
-    },
-
-    handleUserClickResetAddDialog() {
-      this.$confirm('确认重置吗？')
-        .then((_) => {
-          this.handleUserCloseAddDialogReset()
-        })
-        .catch((_) => {})
-    },
-
-    handleAddUser() {
-      this.$refs.addFormRef.validate((valid) => {
-        if (!valid) return
-        handleAddUser(this.addForm).then((res) => {
-          this.$message.success('添加用户成功')
-          this.getUserList()
-        })
-        this.addDialogVisible = false
+    clearUserForm() {
+      Object.keys(this.userForm).forEach((key) => {
+        this.userForm[key] = ''
       })
     },
 
-    handleUserCloseEditDialogReset() {
-      this.$refs.editFormRef.resetFields()
+    openAddUserDialog() {
+      this.id = 1
+      this.userDialogVisible = true
+      this.clearUserForm()
     },
 
-    getEditUserInfo(uId) {
+    addOrEditUser() {
+      if (this.id === 1) {
+        return this.handleAddUser()
+      }
+      if (this.id === 2) {
+        return this.handleEditUser()
+      }
+    },
+
+    handleAddUser() {
+      this.$refs.userFormRef.validate((valid) => {
+        if (!valid) return
+        handleAddUser(this.userForm).then((res) => {
+          this.$message.success('添加用户成功')
+          this.getUserList()
+        })
+        this.userDialogVisible = false
+      })
+    },
+
+    openEditUserDialog(uId) {
+      this.id = 2
+      this.userDialogVisible = true
       getUserInfo(uId).then((res) => {
-        this.editForm = res.data
-        this.editDialogVisible = true
+        this.userForm.id = res.data.id
+        this.userForm.username = res.data.username
+        this.userForm.email = res.data.email
+        this.userForm.mobile = res.data.mobile
       })
     },
 
     handleEditUser() {
-      this.$refs.editFormRef.validate((valid) => {
+      this.$refs.userFormRef.validate((valid) => {
         if (!valid) return
-        handleEditUser(this.editForm.id, {
-          email: this.editForm.email,
-          mobile: this.editForm.mobile,
+        handleEditUser(this.userForm.id, {
+          email: this.userForm.email,
+          mobile: this.userForm.mobile,
         }).then((res) => {
           this.$message.success('修改用户成功')
-          this.editDialogVisible = false
           this.getUserList()
         })
+        this.userDialogVisible = false
       })
     },
 
@@ -401,8 +383,8 @@ export default {
       this.currentUserInfo = userInfo
       getRolesList().then((res) => {
         this.rolesList = res.data
-        this.setUserRoleDialogVisible = true
       })
+      this.setUserRoleDialogVisible = true
     },
 
     handleSetUserRole() {
@@ -412,12 +394,12 @@ export default {
       handleSetUserRole(this.currentUserInfo.id, {
         rid: this.newRoleId,
       }).then((res) => {
-        this.setUserRoleDialogVisible = false
         if (res) {
           this.$message.success('分配用户角色成功')
         }
         this.getUserList()
       })
+      this.setUserRoleDialogVisible = false
     },
 
     handleCloseSetUserRoleDialogReset() {
