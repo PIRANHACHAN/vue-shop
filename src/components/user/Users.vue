@@ -1,11 +1,5 @@
 <template>
   <div>
-    <!-- <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>用户管理</el-breadcrumb-item>
-      <el-breadcrumb-item>用户列表</el-breadcrumb-item>
-    </el-breadcrumb>-->
-
     <el-card>
       <el-row :gutter="10">
         <el-col :span="9">
@@ -189,20 +183,30 @@
 </template>
 
 <script>
+import {
+  getUserList,
+  handleUserStateChange,
+  handleAddUser,
+  getUserInfo,
+  handleEditUser,
+  handleDeleteUser,
+  handleSetUserRole,
+} from '@/api/users.js'
+import { getRolesList } from '@/api/rights.js'
 export default {
   data() {
     let checkPassword = async (rule, value, callback) => {
       if (this.addForm.password !== '') {
         await this.$refs.addFormRef.validateField('password')
       }
-      callback()
+      return callback()
     }
 
     let checkPassword2 = (rule, value, callback) => {
       if (value !== this.addForm.password) {
         return callback(new Error('两次输入密码不一致，请重新输入！'))
       }
-      callback()
+      return callback()
     }
 
     let checkEmail = (rule, value, callback) => {
@@ -210,7 +214,7 @@ export default {
       if (regEmail.test(value)) {
         return callback()
       }
-      callback(new Error('请输入合法的邮箱地址'))
+      return callback(new Error('请输入合法的邮箱地址'))
     }
 
     let checkMobile = (rule, value, callback) => {
@@ -218,14 +222,14 @@ export default {
       if (regMobile.test(value)) {
         return callback()
       }
-      callback(new Error('请输入合法的手机号码'))
+      return callback(new Error('请输入合法的手机号码'))
     }
 
     return {
       queryInfo: {
         query: '',
         pagenum: 1,
-        pagesize: 4,
+        pagesize: 5,
       },
       userList: [],
       total: 0,
@@ -241,7 +245,7 @@ export default {
           { required: true, message: '请输入用户名', trigger: 'blur' },
         ],
         password: [
-          { required: true, message: '请输入密码', trigger: 'blur' },
+          { required: false, message: '请输入密码', trigger: 'blur' },
           {
             min: 6,
             max: 15,
@@ -251,19 +255,19 @@ export default {
           { validator: checkPassword, trigger: 'blur' },
         ],
         checkpassword: [
-          { required: true, message: '请再次输入密码', trigger: 'blur' },
+          { required: false, message: '请再次输入密码', trigger: 'blur' },
           { validator: checkPassword2, trigger: 'blur' },
         ],
         email: [
           {
-            required: true,
+            required: false,
             message: '请输入邮箱地址',
             trigger: 'blur',
           },
           { validator: checkEmail, trigger: 'blur' },
         ],
         mobile: [
-          { required: true, message: '请输入手机号码', trigger: 'blur' },
+          { required: false, message: '请输入手机号码', trigger: 'blur' },
           { validator: checkMobile, trigger: 'blur' },
         ],
       },
@@ -286,7 +290,6 @@ export default {
       setUserRoleDialogVisible: false,
       rolesList: [],
       currentUserInfo: {},
-
       newRoleId: '',
     }
   },
@@ -295,36 +298,30 @@ export default {
   },
   methods: {
     getUserList() {
-      this.$http.get('users', { params: this.queryInfo }).then((res) => {
-        const result = res.data
-        if (result.meta.status !== 200)
-          return this.$message.error('获取用户列表失败')
-        this.userList = result.data.users
-        this.total = result.data.total
+      getUserList(this.queryInfo).then((res) => {
+        this.userList = res.data.users
+        this.total = res.data.total
       })
     },
 
-    handleCurrentPageChange(newpage) {
-      this.queryInfo.pagenum = newpage
+    handleCurrentPageChange(newPage) {
+      this.queryInfo.pagenum = newPage
       this.getUserList()
     },
 
-    handlePageSizeChange(newsize) {
-      this.queryInfo.pagesize = newsize
+    handlePageSizeChange(newSize) {
+      this.queryInfo.pagesize = newSize
       this.getUserList()
     },
 
-    handleUserStateChange(userinfo) {
-      this.$http
-        .put(`users/${userinfo.id}/state/${userinfo.mg_state}`)
-        .then((res) => {
-          const result = res.data
-          if (result.meta.status !== 200) {
-            userinfo.mg_state = !userinfo.mg_state
-            return this.$message.error('用户状态设置失败')
-          }
-          this.$message.success('用户状态设置成功')
-        })
+    handleUserStateChange(userInfo) {
+      handleUserStateChange(userInfo.id, userInfo.mg_state).then((res) => {
+        if (res.meta.status !== 200) {
+          userInfo.mg_state = !userInfo.mg_state
+          return this.$message.error('用户状态设置失败')
+        }
+        this.$message.success('用户状态设置成功')
+      })
     },
 
     handleUserCloseDialogConfirm(done) {
@@ -350,15 +347,11 @@ export default {
     handleAddUser() {
       this.$refs.addFormRef.validate((valid) => {
         if (!valid) return
-        this.$http.post('users', this.addForm).then((res) => {
-          const result = res.data
-          if (result.meta.status !== 201) {
-            return this.$message.error('添加用户失败')
-          }
+        handleAddUser(this.addForm).then((res) => {
           this.$message.success('添加用户成功')
-          this.addDialogVisible = false
           this.getUserList()
         })
+        this.addDialogVisible = false
       })
     },
 
@@ -366,12 +359,9 @@ export default {
       this.$refs.editFormRef.resetFields()
     },
 
-    getEditUserInfo(id) {
-      this.$http.get(`users/${id}`).then((res) => {
-        const result = res.data
-        if (result.meta.status !== 200)
-          return this.$message.error('查询用户失败')
-        this.editForm = result.data
+    getEditUserInfo(uId) {
+      getUserInfo(uId).then((res) => {
+        this.editForm = res.data
         this.editDialogVisible = true
       })
     },
@@ -379,33 +369,25 @@ export default {
     handleEditUser() {
       this.$refs.editFormRef.validate((valid) => {
         if (!valid) return
-        this.$http
-          .put(`users/${this.editForm.id}`, {
-            email: this.editForm.email,
-            mobile: this.editForm.mobile,
-          })
-          .then((res) => {
-            const result = res.data
-            if (result.meta.status !== 200)
-              return this.$message.error('修改用户失败')
-            this.$message.success('修改用户成功')
-            this.editDialogVisible = false
-            this.getUserList()
-          })
+        handleEditUser(this.editForm.id, {
+          email: this.editForm.email,
+          mobile: this.editForm.mobile,
+        }).then((res) => {
+          this.$message.success('修改用户成功')
+          this.editDialogVisible = false
+          this.getUserList()
+        })
       })
     },
 
-    handleDeleteUser(id) {
+    handleDeleteUser(uId) {
       this.$confirm('此操作将永久删除该用户，是否继续？', '删除提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
       })
         .then(() => {
-          this.$http.delete(`users/${id}`).then((res) => {
-            const result = res.data
-            if (result.meta.status !== 200)
-              return this.$message.error('删除用户失败')
+          handleDeleteUser(uId).then((res) => {
             this.$message.success('删除用户成功')
             this.getUserList()
           })
@@ -415,14 +397,10 @@ export default {
         })
     },
 
-    getRolesList(userinfo) {
-      this.currentUserInfo = userinfo
-      this.$http.get('roles').then((res) => {
-        const result = res.data
-        if (result.meta.status !== 200) {
-          return this.$message.error('获取角色列表失败')
-        }
-        this.rolesList = result.data
+    getRolesList(userInfo) {
+      this.currentUserInfo = userInfo
+      getRolesList().then((res) => {
+        this.rolesList = res.data
         this.setUserRoleDialogVisible = true
       })
     },
@@ -431,19 +409,15 @@ export default {
       if (!this.newRoleId) {
         return this.$message.error('请选择要分配的角色！')
       }
-      this.$http
-        .put(`users/${this.currentUserInfo.id}/role`, {
-          rid: this.newRoleId,
-        })
-        .then((res) => {
-          const result = res.data
-          if (result.meta.status !== 200) {
-            return this.$message.error('分配用户角色失败')
-          }
+      handleSetUserRole(this.currentUserInfo.id, {
+        rid: this.newRoleId,
+      }).then((res) => {
+        this.setUserRoleDialogVisible = false
+        if (res) {
           this.$message.success('分配用户角色成功')
-          this.getUserList()
-          this.setUserRoleDialogVisible = false
-        })
+        }
+        this.getUserList()
+      })
     },
 
     handleCloseSetUserRoleDialogReset() {

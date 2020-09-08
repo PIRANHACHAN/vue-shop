@@ -16,7 +16,7 @@ $http.interceptors.request.use(
     // 页面顶端进度条
     Nprogress.start()
 
-    config.headers['Authorization'] = window.sessionStorage.getItem('token')
+    config.headers['authorization'] = window.sessionStorage.getItem('token')
     return config
   },
   (error) => {
@@ -37,8 +37,8 @@ $http.interceptors.response.use(
           type: 'error',
           message: res.meta.msg,
         })
+        return
       }
-      return
     }
     return res
   },
