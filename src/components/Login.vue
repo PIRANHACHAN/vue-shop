@@ -2,15 +2,9 @@
   <div class="login-container">
     <div class="login-box">
       <div class="avatar-box">
-        <img alt="头像" src="../assets/logo.png" />
+        <img alt="头像" src="@/assets/iron-man.jpg" />
       </div>
-      <el-form
-        :model="loginForm"
-        :rules="loginFormRules"
-        class="login-form"
-        label-width="0px"
-        ref="loginFormRef"
-      >
+      <el-form :model="loginForm" :rules="loginFormRules" class="login-form" ref="loginFormRef">
         <el-form-item prop="username">
           <el-input prefix-icon="el-icon-user" v-model="loginForm.username"></el-input>
         </el-form-item>
@@ -19,7 +13,7 @@
         </el-form-item>
         <el-form-item class="btns">
           <el-button @click="handleLogin" type="primary">登录</el-button>
-          <el-button @click="handleResetLogin" type="info">重置</el-button>
+          <el-button @click="handleResetLoginForm" type="info">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -27,6 +21,7 @@
 </template>
 
 <script>
+import { login } from '@/api/login.js'
 export default {
   data() {
     return {
@@ -51,18 +46,18 @@ export default {
     }
   },
   methods: {
-    handleResetLogin() {
+    handleResetLoginForm() {
       this.$refs.loginFormRef.resetFields()
     },
     handleLogin() {
-      this.$refs.loginFormRef.validate(async (valid) => {
+      this.$refs.loginFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.post('login', this.loginForm)
-        if (res.meta.status !== 200) return this.$message.error('登录失败')
-        this.$message.success('登录成功')
-        window.sessionStorage.setItem('token', res.data.token)
-        window.sessionStorage.setItem('username', res.data.username)
-        this.$router.push('/home')
+        login(this.loginForm).then((res) => {
+          window.sessionStorage.setItem('token', res.data.token)
+          window.sessionStorage.setItem('username', res.data.username)
+          this.$message.success('登录成功')
+          this.$router.push('/home')
+        })
       })
     },
   },
@@ -71,24 +66,26 @@ export default {
 
 <style lang="less" scoped>
 .login-container {
-  background-color: #2d3436;
+  background: #fff;
+  width: 100%;
   height: 100%;
 }
 
 .login-box {
-  width: 450px;
+  width: 500px;
   height: 300px;
   background-color: #fff;
+  box-shadow: 0 0 10px #ddd;
   border-radius: 3px;
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 40%;
   transform: translate(-50%, -50%);
 }
 
 .avatar-box {
-  width: 130px;
-  height: 130px;
+  width: 120px;
+  height: 120px;
   border: 1px solid #eee;
   border-radius: 50%;
   padding: 10px;
@@ -101,8 +98,6 @@ export default {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background-color: #eee;
-    transform: rotate(180deg);
   }
 }
 
