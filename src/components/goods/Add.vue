@@ -141,7 +141,8 @@ export default {
       manyTableData: [],
       onlyTableData: [],
       // 打包前需要部署为线上接口
-      uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
+      // uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
+      uploadURL: 'http://api.piranhachan.top/api/private/v1/upload',
       uploadHeader: { authorization: window.sessionStorage.getItem('token') },
       previewPath: '',
       previewVisible: false,

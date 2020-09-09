@@ -5,8 +5,8 @@ import 'nprogress/nprogress.css'
 
 // 创建一个axios的对象
 const $http = axios.create({
-  // baseURL: 'http://api.piranhachan.top/api/private/v1/',
-  baseURL: 'http://127.0.0.1:8888/api/private/v1/',
+  baseURL: 'http://api.piranhachan.top/api/private/v1/',
+  // baseURL: 'http://127.0.0.1:8888/api/private/v1/',
   timeout: 8000,
 })
 
