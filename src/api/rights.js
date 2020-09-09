@@ -44,9 +44,9 @@ export function handleDeleteRoleRight(roleId, rightId) {
   })
 }
 
-export function getRightsList() {
+export function getRightsList(type) {
   return request({
-    url: 'rights/tree',
+    url: `rights/${type}`,
     method: 'get',
   })
 }

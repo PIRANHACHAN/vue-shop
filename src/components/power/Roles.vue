@@ -288,7 +288,7 @@ export default {
     openSetRightsDialog(role) {
       this.roleId = role.id
       this.getLeafKeys(role, this.defSelectKeys)
-      getRightsList().then((res) => {
+      getRightsList('tree').then((res) => {
         this.rightsList = res.data
       })
       this.setRightDialogVisible = true
