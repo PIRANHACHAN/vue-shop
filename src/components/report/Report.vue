@@ -1,20 +1,13 @@
 <template>
-  <div>
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>数据统计</el-breadcrumb-item>
-      <el-breadcrumb-item>数据报表</el-breadcrumb-item>
-    </el-breadcrumb>
-
-    <el-card>
-      <div id="main" style="width: 800px;height:450px;"></div>
-    </el-card>
-  </div>
+  <el-card>
+    <div id="main" style="width: 100%; height: 450px;"></div>
+  </el-card>
 </template>
 
 <script>
 import echarts from 'echarts'
 import _ from 'lodash'
+import { getReportData } from '@/api/report.js'
 export default {
   data() {
     return {
@@ -55,14 +48,12 @@ export default {
     this.initEchart()
   },
   methods: {
-    async initEchart() {
+    initEchart() {
       var myChart = echarts.init(document.getElementById('main'))
-      const { data: res } = await this.$http.get(`reports/type/1`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取这些图数据失败！')
-      }
-      this.chartOpt = _.merge(res.data, this.options)
-      myChart.setOption(this.chartOpt)
+      getReportData().then((res) => {
+        this.chartOpt = _.merge(res.data, this.options)
+        myChart.setOption(this.chartOpt)
+      })
     },
   },
 }
