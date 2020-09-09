@@ -1,15 +1,9 @@
 <template>
   <div>
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>商品管理</el-breadcrumb-item>
-      <el-breadcrumb-item>商品分类</el-breadcrumb-item>
-    </el-breadcrumb>
-
     <el-card>
       <el-row>
         <el-col>
-          <el-button @click="showAddGoodsCateDialog" type="primary">添加分类</el-button>
+          <el-button @click="openAddGoodsCateDialog" type="primary">添加分类</el-button>
         </el-col>
       </el-row>
 
@@ -36,7 +30,7 @@
         <template slot="operate" slot-scope="scope">
           <el-row>
             <el-button
-              @click="showEditGoodsCateDialog(scope.row.cat_id)"
+              @click="openEditGoodsCateDialog(scope.row.cat_id)"
               icon="el-icon-edit"
               type="primary"
             >编辑</el-button>
@@ -115,13 +109,20 @@
       </el-form>
       <span class="dialog-footer" slot="footer">
         <el-button @click="editCateDialogVisible = false">取 消</el-button>
-        <el-button @click="handleEditGoodsCateName" type="primary">确 定</el-button>
+        <el-button @click="handleEditGoodsCate" type="primary">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import {
+  getGoodsCateList,
+  handleAddGoodsCate,
+  getThisCateInfo,
+  handleEditGoodsCate,
+  handleDeleteGoodsCate,
+} from '@/api/goods.js'
 export default {
   data() {
     return {
@@ -187,15 +188,11 @@ export default {
     this.getGoodsCateList()
   },
   methods: {
-    async getGoodsCateList() {
-      const { data: res } = await this.$http.get('categories', {
-        params: this.queryInfo,
+    getGoodsCateList() {
+      getGoodsCateList(this.queryInfo).then((res) => {
+        this.goodsCateList = res.data.result
+        this.total = res.data.total
       })
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取商品分类失败')
-      }
-      this.goodsCateList = res.data.result
-      this.total = res.data.total
     },
 
     handleCurrentPageChange(newPage) {
@@ -208,25 +205,15 @@ export default {
       this.getGoodsCateList()
     },
 
-    showAddGoodsCateDialog() {
+    openAddGoodsCateDialog() {
       this.getParentGoodsCateList()
       this.addCateDialogVisible = true
     },
 
     getParentGoodsCateList() {
-      this.$http
-        .get('categories', {
-          params: {
-            type: 2,
-          },
-        })
-        .then((res) => {
-          const result = res.data
-          if (result.meta.status !== 200) {
-            return this.$message.error('获取商品分类失败')
-          }
-          this.parentGoodsCateList = result.data
-        })
+      getGoodsCateList({ type: 2 }).then((res) => {
+        this.parentGoodsCateList = res.data
+      })
     },
 
     handleParentGoodsCateChange(cateList) {
@@ -245,18 +232,16 @@ export default {
     },
 
     handleAddGoodsCate() {
-      this.$refs.addCateFormRef.validate(async (valid) => {
+      this.$refs.addCateFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.post(
-          'categories',
-          this.addCateForm
-        )
-        if (res.meta.status !== 201) {
-          this.$message.error('添加分类失败')
-        }
-        this.$message.success('添加分类成功')
-        this.getGoodsCateList()
-        this.getParentGoodsCateList()
+        handleAddGoodsCate(this.addCateForm).then((res) => {
+          if (res.meta.status !== 201) {
+            this.$message.error('添加分类失败')
+          }
+          this.$message.success('添加分类成功')
+          this.getGoodsCateList()
+          this.getParentGoodsCateList()
+        })
       })
     },
 
@@ -267,52 +252,42 @@ export default {
       this.addCateForm.cat_level = 0
     },
 
-    showEditGoodsCateDialog(id) {
-      this.getThisCateInfo(id)
+    openEditGoodsCateDialog(cateId) {
+      this.getThisCateInfo(cateId)
       this.editCateDialogVisible = true
     },
 
-    async getThisCateInfo(id) {
-      const { data: res } = await this.$http.get(`categories/${id}`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取商品分类信息失败')
-      }
-      this.editCateForm = res.data
+    getThisCateInfo(cateId) {
+      getThisCateInfo(cateId).then((res) => {
+        this.editCateForm = res.data
+      })
     },
 
     handleEditDialogCloseReset() {
       this.$refs.editCateFormRef.resetFields()
     },
 
-    handleEditGoodsCateName() {
-      this.$refs.editCateFormRef.validate(async (valid) => {
+    handleEditGoodsCate() {
+      this.$refs.editCateFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.put(
-          `categories/${this.editCateForm.cat_id}`,
-          {
-            cat_name: this.editCateForm.cat_name,
-          }
-        )
-        if (res.meta.status !== 200) {
-          return this.$message.error('修改分类名称失败')
-        }
-        this.$message.success('修改分类名称成功')
-        this.getGoodsCateList()
+        handleEditGoodsCate(this.editCateForm.cat_id, {
+          cat_name: this.editCateForm.cat_name,
+        }).then((res) => {
+          this.$message.success('修改分类名称成功')
+          this.getGoodsCateList()
+        })
         this.editCateDialogVisible = false
       })
     },
 
-    handleDeleteGoodsCate(id) {
+    handleDeleteGoodsCate(cateId) {
       this.$confirm('此操作将会删除该分类，是否继续？', '删除提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning',
       })
         .then(() => {
-          this.$http.delete(`categories/${id}`).then((res) => {
-            const result = res.data
-            if (result.meta.msg === '删除失败')
-              return this.$message.error('删除商品分类失败')
+          handleDeleteGoodsCate(cateId).then((res) => {
             this.$message.success('删除商品分类成功')
             this.getGoodsCateList()
           })
@@ -326,10 +301,6 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.tree-table {
-  margin-top: 15px;
-}
-
 .el-cascader {
   width: 100%;
 }

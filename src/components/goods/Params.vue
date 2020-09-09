@@ -1,11 +1,5 @@
 <template>
   <div>
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>商品管理</el-breadcrumb-item>
-      <el-breadcrumb-item>分类参数</el-breadcrumb-item>
-    </el-breadcrumb>
-
     <el-card>
       <el-alert :closable="false" show-icon title="注意：只允许为第三级分类设置相关参数！" type="warning"></el-alert>
 
@@ -62,7 +56,7 @@
             <el-table-column label="操作">
               <template slot-scope="scope">
                 <el-button
-                  @click="showEditDialog(scope.row)"
+                  @click="openEditDialog(scope.row)"
                   icon="el-icon-edit"
                   size="small"
                   type="primary"
@@ -115,7 +109,7 @@
             <el-table-column label="操作">
               <template slot-scope="scope">
                 <el-button
-                  @click="showEditDialog(scope.row)"
+                  @click="openEditDialog(scope.row)"
                   icon="el-icon-edit"
                   size="small"
                   type="primary"
@@ -182,6 +176,15 @@
 </template>
 
 <script>
+import {
+  getGoodsCateList,
+  getParamsData,
+  handleAddParams,
+  getEditParams,
+  handleEditParams,
+  handleDeleteParams,
+  saveAttrVals,
+} from '@/api/goods.js'
 export default {
   data() {
     return {
@@ -226,41 +229,35 @@ export default {
     this.getGoodsCateList()
   },
   methods: {
-    async getGoodsCateList() {
-      const { data: res } = await this.$http.get('categories')
-      if (res.meta.status !== 200) {
-        return
-      }
-      this.goodsCateList = res.data
+    getGoodsCateList() {
+      getGoodsCateList().then((res) => {
+        this.goodsCateList = res.data
+      })
     },
 
-    async getParamsData() {
+    getParamsData() {
       if (this.selectGoodsCateKeys.length !== 3) {
         this.selectGoodsCateKeys = []
         this.manyTableData = []
         this.onlyTableData = []
         return
       }
-      const { data: res } = await this.$http.get(
-        `categories/${this.selectedCateId}/attributes`,
-        {
-          params: {
-            sel: this.activeTabsName,
-          },
+      getParamsData(this.selectedCateId, { sel: this.activeTabsName }).then(
+        (res) => {
+          // 将attr_vals循环保存为数组
+          res.data.forEach((item) => {
+            item.attr_vals = item.attr_vals ? item.attr_vals.split(' ') : []
+            // 单独控制NEWTAG文本框的显示与输入的值
+            item.inputNewTagVisible = false
+            item.inputNewTagValue = ''
+          })
+          if (this.activeTabsName === 'many') {
+            this.manyTableData = res.data
+          } else {
+            this.onlyTableData = res.data
+          }
         }
       )
-      // 将attr_vals循环保存为数组
-      res.data.forEach((item) => {
-        item.attr_vals = item.attr_vals ? item.attr_vals.split(' ') : []
-        // 单独控制NEWTAG文本框的显示与输入的值
-        item.inputNewTagVisible = false
-        item.inputNewTagValue = ''
-      })
-      if (this.activeTabsName === 'many') {
-        this.manyTableData = res.data
-      } else {
-        this.onlyTableData = res.data
-      }
     },
 
     handleUserSelectCate() {
@@ -276,20 +273,15 @@ export default {
     },
 
     handleAddParams() {
-      this.$refs.addFormRef.validate(async (valid) => {
+      this.$refs.addFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.post(
-          `categories/${this.selectedCateId}/attributes`,
-          {
-            attr_name: this.addForm.attr_name,
-            attr_sel: this.activeTabsName,
-          }
-        )
-        if (res.meta.status !== 201) {
-          return this.$message.error(`添加${this.dialogTitleText}失败`)
-        }
-        this.getParamsData()
-        this.$message.success(`添加${this.dialogTitleText}成功`)
+        handleAddParams(this.selectedCateId, {
+          attr_name: this.addForm.attr_name,
+          attr_sel: this.activeTabsName,
+        }).then((res) => {
+          this.$message.success(`添加${this.dialogTitleText}成功`)
+          this.getParamsData()
+        })
         this.addDialogVisible = false
       })
     },
@@ -298,41 +290,29 @@ export default {
       this.$refs.editFormRef.resetFields()
     },
 
-    showEditDialog(currentParams) {
+    openEditDialog(currentParams) {
       this.editDialogVisible = true
       this.getEditParams(currentParams)
     },
 
-    async getEditParams(currentParams) {
-      const { data: res } = await this.$http.get(
-        `categories/${this.selectedCateId}/attributes/${currentParams.attr_id}`,
-        {
-          params: {
-            attr_sel: this.activeTabsName,
-          },
-        }
-      )
-      if (res.meta.status !== 200) {
-        return this.$message.error(`获取${this.dialogTitleText}失败`)
-      }
-      this.editForm = res.data
+    getEditParams(currentParams) {
+      getEditParams(this.selectedCateId, currentParams.attr_id, {
+        attr_sel: this.activeTabsName,
+      }).then((res) => {
+        this.editForm = res.data
+      })
     },
 
     handleEditParams() {
-      this.$refs.editFormRef.validate(async (valid) => {
+      this.$refs.editFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.put(
-          `categories/${this.selectedCateId}/attributes/${this.editForm.attr_id}`,
-          {
-            attr_name: this.editForm.attr_name,
-            attr_sel: this.activeTabsName,
-          }
-        )
-        if (res.meta.status !== 200) {
-          return this.$message.error(`修改${this.dialogTitleText}失败`)
-        }
-        this.$message.success(`修改${this.dialogTitleText}成功`)
-        this.getParamsData()
+        handleEditParams(this.selectedCateId, this.editForm.attr_id, {
+          attr_name: this.editForm.attr_name,
+          attr_sel: this.activeTabsName,
+        }).then((res) => {
+          this.$message.success(`修改${this.dialogTitleText}成功`)
+          this.getParamsData()
+        })
         this.editDialogVisible = false
       })
     },
@@ -348,18 +328,12 @@ export default {
         }
       )
         .then(() => {
-          this.$http
-            .delete(
-              `categories/${this.selectedCateId}/attributes/${currentParams.attr_id}`
-            )
-            .then((res) => {
-              const ret = res.data
-              if (ret.meta.status !== 200) {
-                return this.$message.error(`删除${this.dialogTitleText}失败`)
-              }
+          handleDeleteParams(this.selectedCateId, currentParams.attr_id).then(
+            (res) => {
               this.$message.success(`删除${this.dialogTitleText}成功`)
               this.getParamsData()
-            })
+            }
+          )
         })
         .catch(() => {
           this.$message.info('已取消删除')
@@ -375,8 +349,7 @@ export default {
       currentParams.inputNewTagVisible = true
       /**
        * $nextTick()的作用
-       * 当页面上的元素被重新渲染之后，
-       * 才会执行回调函数中的代码
+       * 当页面上的元素被重新渲染之后，才会执行回调函数中的代码
        */
       this.$nextTick((_) => {
         this.$refs.inputNewTagRef.$refs.input.focus()
@@ -395,19 +368,14 @@ export default {
       this.saveAttrVals(currentParams)
     },
 
-    async saveAttrVals(currentParams) {
-      const { data: res } = await this.$http.put(
-        `categories/${this.selectedCateId}/attributes/${currentParams.attr_id}`,
-        {
-          attr_name: currentParams.attr_name,
-          attr_sel: currentParams.attr_sel,
-          attr_vals: currentParams.attr_vals.join(' '),
-        }
-      )
-      if (res.meta.status !== 200) {
-        return this.$message.error(`修改${this.dialogTitleText}标签失败`)
-      }
-      this.$message.success(`修改${this.dialogTitleText}标签成功`)
+    saveAttrVals(currentParams) {
+      saveAttrVals(this.selectedCateId, currentParams.attr_id, {
+        attr_name: currentParams.attr_name,
+        attr_sel: currentParams.attr_sel,
+        attr_vals: currentParams.attr_vals.join(' '),
+      }).then((res) => {
+        this.$message.success(`修改${this.dialogTitleText}标签成功`)
+      })
     },
   },
   computed: {
@@ -437,23 +405,32 @@ export default {
 .el-row {
   margin-top: 15px;
 }
+
 .el-cascader {
   min-width: 330px;
 }
 
-.el-tag + .el-tag {
+.el-tag {
   margin-left: 10px;
+  margin-top: 5px;
+  float: left;
 }
+
 .button-new-tag {
   margin-left: 10px;
+  margin-top: 5px;
   height: 32px;
   line-height: 30px;
   padding-top: 0;
   padding-bottom: 0;
+  float: left;
 }
+
 .input-new-tag {
   margin-left: 10px;
+  margin-top: 5px;
   width: 90px;
   vertical-align: bottom;
+  float: left;
 }
 </style>
