@@ -1,11 +1,5 @@
 <template>
   <div>
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>权限管理</el-breadcrumb-item>
-      <el-breadcrumb-item>角色列表</el-breadcrumb-item>
-    </el-breadcrumb>
-
     <el-card>
       <el-row>
         <el-col>
@@ -60,11 +54,11 @@
         <el-table-column label="#" type="index"></el-table-column>
         <el-table-column label="角色名称" prop="roleName"></el-table-column>
         <el-table-column label="角色描述" prop="roleDesc"></el-table-column>
-        <el-table-column label="操作">
+        <el-table-column label="操作" width="290">
           <template slot-scope="scope">
             <el-row>
               <el-button
-                @click="getEditUserInfo(scope.row.id)"
+                @click="openEditUserDialog(scope.row.id)"
                 icon="el-icon-edit"
                 size="small"
                 type="primary"
@@ -76,7 +70,7 @@
                 type="danger"
               >删除</el-button>
               <el-button
-                @click="handleSetRights(scope.row)"
+                @click="openSetRightsDialog(scope.row)"
                 icon="el-icon-setting"
                 size="small"
                 type="warning"
@@ -88,7 +82,6 @@
     </el-card>
 
     <el-dialog
-      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
       :visible.sync="addDialogVisible"
       @close="handleUserCloseAddDialogReset"
@@ -115,7 +108,6 @@
     </el-dialog>
 
     <el-dialog
-      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
       :visible.sync="editDialogVisible"
       @close="handleUserCloseEditDialogReset"
@@ -142,7 +134,6 @@
     </el-dialog>
 
     <el-dialog
-      :before-close="handleUserCloseDialogConfirm"
       :close-on-click-modal="false"
       :visible.sync="setRightDialogVisible"
       @close="handleCloseSetRightDialogReset"
@@ -161,14 +152,24 @@
         show-checkbox
       ></el-tree>
       <span class="dialog-footer" slot="footer">
-        <el-button @click="handleUserCloseDialogConfirm">取 消</el-button>
-        <el-button @click="handleConfirmSetRights" type="primary">确 定</el-button>
+        <el-button @click="setRightDialogVisible=false">取 消</el-button>
+        <el-button @click="handleSetRights" type="primary">确 定</el-button>
       </span>
     </el-dialog>
   </div>
 </template>
 
 <script>
+import {
+  getRolesList,
+  handleAddRoles,
+  getUserInfo,
+  handleEditRoles,
+  handleDeleteRoles,
+  handleDeleteRoleRight,
+  getRightsList,
+  handleSetRights,
+} from '@/api/rights.js'
 export default {
   data() {
     return {
@@ -213,128 +214,87 @@ export default {
   },
   methods: {
     getRolesList() {
-      this.$http.get('roles').then((res) => {
-        const result = res.data
-        if (result.meta.status !== 200) {
-          return this.$message.error('获取角色列表失败')
-        }
-        this.rolesList = result.data
+      getRolesList().then((res) => {
+        this.rolesList = res.data
       })
-    },
-
-    handleUserCloseDialogConfirm(done) {
-      this.$confirm('确认关闭吗？')
-        .then((_) => {
-          done()
-        })
-        .catch((_) => {})
-    },
-
-    handleUserCloseAddDialogReset() {
-      this.$refs.addFormRef.resetFields()
     },
 
     handleAddRoles() {
-      this.$refs.addFormRef.validate(async (valid) => {
-        const { data: res } = await this.$http.post('roles', this.addForm)
-        if (res.meta.status !== 201) {
-          return this.$message.error('添加角色失败')
-        }
+      this.$refs.addFormRef.validate((valid) => {
+        if (!valid) return
+        handleAddRoles(this.addForm).then((res) => {
+          this.getRolesList()
+        })
         this.$message.success('添加角色成功')
         this.addDialogVisible = false
-        this.getRolesList()
       })
     },
 
-    handleUserCloseEditDialogReset() {
-      this.$refs.editFormRef.resetFields()
-    },
-
-    async getEditUserInfo(id) {
-      const { data: res } = await this.$http.get(`roles/${id}`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('查询角色失败')
-      }
+    openEditUserDialog(rId) {
+      getUserInfo(rId).then((res) => {
+        this.editForm = res.data
+      })
       this.editDialogVisible = true
-      this.editForm = res.data
     },
 
     handleEditRoles() {
-      this.$refs.editFormRef.validate(async (valid) => {
+      this.$refs.editFormRef.validate((valid) => {
         if (!valid) return
-        const { data: res } = await this.$http.put(
-          `roles/${this.editForm.roleId}`,
-          {
-            roleName: this.editForm.roleName,
-            roleDesc: this.editForm.roleDesc,
-          }
-        )
-        if (res.meta.status !== 200) {
-          return this.$message.error('修改角色失败')
-        }
-        this.$message.success('修改角色成功')
+        handleEditRoles(this.editForm.roleId, {
+          roleName: this.editForm.roleName,
+          roleDesc: this.editForm.roleDesc,
+        }).then((res) => {
+          this.$message.success('修改角色成功')
+          this.getRolesList()
+        })
         this.editDialogVisible = false
-        this.getRolesList()
       })
     },
 
-    async handleDeleteRoles(id) {
-      const confirmRes = await this.$confirm(
-        '此操作将永久删除该角色，是否继续',
-        '删除提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-        }
-      ).catch((err) => err)
-      if (confirmRes !== 'confirm') {
-        return this.$message.info('已取消删除')
-      }
-      const { data: res } = await this.$http.delete(`roles/${id}`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('删除角色失败')
-      }
-      this.$message.success('删除角色成功')
-      this.getRolesList()
+    handleDeleteRoles(rId) {
+      this.$confirm('此操作将永久删除该角色，是否继续', '删除提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          handleDeleteRoles(rId).then((res) => {
+            this.$message.success('删除角色成功')
+            this.getRolesList()
+          })
+        })
+        .catch((err) => {
+          this.$message.info('已取消删除')
+        })
     },
 
-    async handleDeleteRoleRight(role, rightId) {
-      const confirmRes = await this.$confirm(
-        '此操作将删除该角色权限，是否继续',
-        '删除提示',
-        {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-        }
-      ).catch((err) => err)
-      if (confirmRes !== 'confirm') {
-        return this.$message.info('已取消删除')
-      }
-      const { data: res } = await this.$http.delete(
-        `roles/${role.id}/rights/${rightId}`
-      )
-      if (res.meta.status !== 200) {
-        return this.$message.error('删除角色权限失败')
-      }
-      this.$message.success('删除角色权限成功')
-      // this.getRolesList()
-      role.children = res.data
+    handleDeleteRoleRight(role, rightId) {
+      this.$confirm('此操作将删除该角色权限，是否继续', '删除提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+      })
+        .then(() => {
+          handleDeleteRoleRight(role.id, rightId).then((res) => {
+            role.children = res.data
+            this.$message.success('删除角色权限成功')
+          })
+        })
+        .catch((err) => {
+          this.$message.info('已取消删除')
+        })
     },
 
-    async handleSetRights(role) {
+    openSetRightsDialog(role) {
       this.roleId = role.id
-      const { data: res } = await this.$http.get(`rights/tree`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取权限列表失败')
-      }
-      this.rightsList = res.data
       this.getLeafKeys(role, this.defSelectKeys)
+      getRightsList().then((res) => {
+        this.rightsList = res.data
+      })
       this.setRightDialogVisible = true
     },
 
-    // 递归方法找到第三层权限
+    // 递归找到第三层权限
     getLeafKeys(node, arr) {
       if (!node.children) {
         return arr.push(node.id)
@@ -344,26 +304,29 @@ export default {
       })
     },
 
-    handleCloseSetRightDialogReset() {
-      this.defSelectKeys = []
-    },
-
-    async handleConfirmSetRights() {
+    handleSetRights() {
       const rightsKeys = [
         ...this.$refs.rightsTreeRef.getCheckedKeys(),
         ...this.$refs.rightsTreeRef.getHalfCheckedKeys(),
       ]
       const rightsIdStr = rightsKeys.join(',')
-      const { data: res } = await this.$http.post(
-        `roles/${this.roleId}/rights`,
-        { rids: rightsIdStr }
-      )
-      if (res.meta.status !== 200) {
-        return this.$message.error('更新角色权限失败')
-      }
-      this.$message.success('更新角色权限成功')
-      this.getRolesList()
+      handleSetRights(this.roleId, { rids: rightsIdStr }).then((res) => {
+        this.$message.success('更新角色权限成功')
+        this.getRolesList()
+      })
       this.setRightDialogVisible = false
+    },
+
+    handleCloseSetRightDialogReset() {
+      this.defSelectKeys = []
+    },
+
+    handleUserCloseAddDialogReset() {
+      this.$refs.addFormRef.resetFields()
+    },
+
+    handleUserCloseEditDialogReset() {
+      this.$refs.editFormRef.resetFields()
     },
   },
 }
