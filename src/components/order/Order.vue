@@ -1,11 +1,5 @@
 <template>
   <div>
-    <el-breadcrumb separator-class="el-icon-arrow-right">
-      <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
-      <el-breadcrumb-item>订单管理</el-breadcrumb-item>
-      <el-breadcrumb-item>订单列表</el-breadcrumb-item>
-    </el-breadcrumb>
-
     <el-card>
       <el-row>
         <!-- 此处后端接口未完成 -->
@@ -23,22 +17,22 @@
       </el-row>
 
       <el-table :data="orderList" border stripe>
-        <el-table-column label="#" type="index"></el-table-column>
+        <el-table-column align="center" label="#" type="index"></el-table-column>
         <el-table-column label="订单编号" prop="order_number"></el-table-column>
-        <el-table-column label="订单价格" prop="order_price"></el-table-column>
-        <el-table-column label="是否付款" prop="pay_status">
+        <el-table-column align="center" label="订单价格" prop="order_price" width="130"></el-table-column>
+        <el-table-column align="center" label="是否付款" prop="pay_status" width="100">
           <template slot-scope="scope">
             <el-tag type="success" v-if="scope.row.pay_status === '1'">已付款</el-tag>
             <el-tag type="danger" v-else>未付款</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="是否发货">
+        <el-table-column align="center" label="是否发货" width="90">
           <template slot-scope="scope">{{ scope.row.is_send }}</template>
         </el-table-column>
-        <el-table-column label="下单时间">
+        <el-table-column align="center" label="下单时间" width="160">
           <template slot-scope="scope">{{ scope.row.create_time | dateFormat }}</template>
         </el-table-column>
-        <el-table-column label="操作">
+        <el-table-column align="center" label="操作" width="130">
           <template>
             <el-tooltip
               :enterable="false"
@@ -48,7 +42,7 @@
               placement="top"
             >
               <el-button
-                @click="showEditAddressVisible"
+                @click="openEditAddressVisible"
                 icon="el-icon-edit"
                 size="small"
                 type="primary"
@@ -62,7 +56,7 @@
               placement="top"
             >
               <el-button
-                @click="showCheckGoodsProgress"
+                @click="checkGoodsProgress"
                 icon="el-icon-location"
                 size="small"
                 type="success"
@@ -129,7 +123,8 @@
 </template>
 
 <script>
-import cityData from './city_data2017_element.js'
+import cityData from '@/assets/cityData.js'
+import { getOrdersList, checkGoodsProgress } from '@/api/orders.js'
 export default {
   data() {
     return {
@@ -162,15 +157,11 @@ export default {
     this.getOrdersList()
   },
   methods: {
-    async getOrdersList() {
-      const { data: res } = await this.$http.get('orders', {
-        params: this.queryInfo,
+    getOrdersList() {
+      getOrdersList(this.queryInfo).then((res) => {
+        this.orderList = res.data.goods
+        this.total = res.data.total
       })
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取订单列表失败')
-      }
-      this.orderList = res.data.goods
-      this.total = res.data.total
     },
 
     handleCurrentPageChange(newPage) {
@@ -183,7 +174,7 @@ export default {
       this.getOrdersList()
     },
 
-    showEditAddressVisible() {
+    openEditAddressVisible() {
       this.addressVisible = true
     },
 
@@ -196,12 +187,13 @@ export default {
       this.$refs.addressFormRef.resetFields()
     },
 
-    async showCheckGoodsProgress() {
-      const { data: res } = await this.$http.get(`kuaidi/1106975712662`)
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取物流信息失败！')
-      }
-      this.progressData = res.data
+    checkGoodsProgress() {
+      checkGoodsProgress().then((res) => {
+        if (res.meta.status !== 200) {
+          return this.$message.error('获取物流信息失败！')
+        }
+        this.progressData = res.data
+      })
       this.progressVisible = true
     },
   },
