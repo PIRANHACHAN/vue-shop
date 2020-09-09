@@ -19,7 +19,10 @@
 
         <el-row class="person-center">
           <el-col>
-            <img alt src="@/assets/小黄鸭.gif" />
+            <img
+              alt
+              src="https://vue-shop-1252686785.cos.ap-guangzhou.myqcloud.com/img/%E5%B0%8F%E9%BB%84%E9%B8%AD.280177be.gif"
+            />
             <el-dropdown>
               <span class="el-dropdown-link">
                 {{ username }}

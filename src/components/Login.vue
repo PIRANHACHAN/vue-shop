@@ -2,7 +2,10 @@
   <div class="login-container">
     <div class="login-box">
       <div class="avatar-box">
-        <img alt="头像" src="@/assets/iron-man.jpg" />
+        <img
+          alt="头像"
+          src="https://vue-shop-1252686785.cos.ap-guangzhou.myqcloud.com/img/iron-man.96bd620a.jpg"
+        />
       </div>
       <el-form :model="loginForm" :rules="loginFormRules" class="login-form" ref="loginFormRef">
         <el-form-item prop="username">
@@ -66,7 +69,8 @@ export default {
 
 <style lang="less" scoped>
 .login-container {
-  background: url(../assets/login-bg.jpg) no-repeat top center;
+  background: url(https://vue-shop-1252686785.cos.ap-guangzhou.myqcloud.com/img/login-bg.1a325e33.jpg)
+    no-repeat top center;
   // background: #fff;
   width: 100%;
   height: 100%;
