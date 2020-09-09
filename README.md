@@ -1,7 +1,10 @@
-###  Vue后台管理系统（前端）
+### Vue 后台管理系统（前端）
+
 [前端项目预览](http://shop.piranhachan.top)
 
 [后端项目地址](https://gitee.com/wBekvam/vueShop-api-server)
+
+##### 目前迭代了一个版本，旧版本可查看分支[OldVersion0.1](https://github.com/PIRANHACHAN/vue-shop/tree/OldVersion0.1)
 
 #### 功能
 
@@ -15,7 +18,6 @@
 - Lodash
 - Axios
 - Echarts
-
 
 #### 开发
 
@@ -47,10 +49,10 @@ npm run build
 
 #### 后端项目的环境配置
 
-1. 安装MySQL数据库
-2. 安装Node.js环境
+1. 安装 MySQL 数据库
+2. 安装 Node.js 环境
 3. 配置项目相关信息
 4. 启动项目
-   1. 使用phpstudy导入数据库并运行
-   3. node app.js
-5. 使用ApiPost或Postman测试后台项目接口
+   1. 使用 phpstudy 导入数据库并运行
+   2. node app.js
+5. 使用 ApiPost 或 Postman 测试后台项目接口
