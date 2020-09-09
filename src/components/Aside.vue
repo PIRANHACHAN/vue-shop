@@ -91,7 +91,7 @@ export default {
   }
   span {
     font-size: 22px;
-    font-family: serif;
+    font-family: consolas, '宋体' serif;
     color: #333;
     margin-left: 5px;
   }
