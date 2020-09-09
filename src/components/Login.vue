@@ -66,7 +66,8 @@ export default {
 
 <style lang="less" scoped>
 .login-container {
-  background: #fff;
+  background: url(../assets/login-bg.jpg) no-repeat top center;
+  // background: #fff;
   width: 100%;
   height: 100%;
 }
@@ -75,7 +76,7 @@ export default {
   width: 500px;
   height: 300px;
   background-color: #fff;
-  box-shadow: 0 0 10px #ddd;
+  // box-shadow: 0 0 10px #ddd;
   border-radius: 3px;
   position: absolute;
   left: 50%;
