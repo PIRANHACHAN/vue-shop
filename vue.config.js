@@ -12,8 +12,6 @@ module.exports = {
         axios: 'axios',
         lodash: '_',
         echarts: 'echarts',
-        // nprogress: 'NProgress',
-        // 'vue-quill-editor': 'VueQuillEditor',
       })
 
       config.plugin('html').tap((args) => {
