@@ -1,6 +1,6 @@
 ### Vue 后台管理系统（前端）
 
-[前端项目预览](http://shop.piranhachan.top)
+[前端项目预览](http://bg.piranhachan.top)
 
 [后端项目地址](https://gitee.com/wBekvam/vueShop-api-server)
 
