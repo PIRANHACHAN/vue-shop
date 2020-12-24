@@ -1,7 +1,13 @@
 <template>
   <div>
     <el-card>
-      <el-alert :closable="false" center show-icon title="添加商品信息" type="info"></el-alert>
+      <el-alert
+        :closable="false"
+        center
+        show-icon
+        title="添加商品信息"
+        type="info"
+      ></el-alert>
 
       <el-steps :active="activeIndex - 0" align-center finish-status="success">
         <el-step title="基本信息"></el-step>
@@ -50,14 +56,27 @@
             </el-form-item>
           </el-tab-pane>
           <el-tab-pane label="商品参数" name="1">
-            <el-form-item :key="item.attr_id" :label="item.attr_name" v-for="item in manyTableData">
+            <el-form-item
+              :key="item.attr_id"
+              :label="item.attr_name"
+              v-for="item in manyTableData"
+            >
               <el-checkbox-group v-model="item.attr_vals">
-                <el-checkbox :key="i" :label="label" border v-for="(label, i) in item.attr_vals"></el-checkbox>
+                <el-checkbox
+                  :key="i"
+                  :label="label"
+                  border
+                  v-for="(label, i) in item.attr_vals"
+                ></el-checkbox>
               </el-checkbox-group>
             </el-form-item>
           </el-tab-pane>
           <el-tab-pane label="商品属性" name="2">
-            <el-form-item :key="item.attr_id" :label="item.attr_name" v-for="item in onlyTableData">
+            <el-form-item
+              :key="item.attr_id"
+              :label="item.attr_name"
+              v-for="item in onlyTableData"
+            >
               <el-input :value="item.attr_vals.join(',')"></el-input>
             </el-form-item>
           </el-tab-pane>
@@ -74,18 +93,26 @@
               multiple
               ref="uploadPic"
             >
-              <el-button size="small" slot="trigger" type="primary">选取图片</el-button>
+              <el-button size="small" slot="trigger" type="primary"
+                >选取图片</el-button
+              >
               <el-button
                 @click="handleSubmitPicUpload"
                 size="small"
-                style="margin-top: 10px; display: block;"
+                style="margin-top: 10px; display: block"
                 type="success"
-              >点击上传</el-button>
+                >点击上传</el-button
+              >
             </el-upload>
           </el-tab-pane>
           <el-tab-pane label="商品内容" name="4">
             <quill-editor v-model="addForm.goods_introduce"></quill-editor>
-            <el-button @click="handleAddGoods" class="add-goods-btn" type="primary">添加商品</el-button>
+            <el-button
+              @click="handleAddGoods"
+              class="add-goods-btn"
+              type="primary"
+              >添加商品</el-button
+            >
           </el-tab-pane>
         </el-tabs>
       </el-form>
@@ -142,8 +169,9 @@ export default {
       onlyTableData: [],
       // 打包前需要部署为线上接口
       // uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
-      uploadURL: 'http://api.piranhachan.top/api/private/v1/upload',
-      uploadHeader: { authorization: window.sessionStorage.getItem('token') },
+      uploadURL: 'https://api.piranhachan.top/api/private/v1/upload',
+      // uploadURL: 'http://111.231.241.139:8889/api/private/v1/upload',
+      uploadHeader: { Authorization: window.sessionStorage.getItem('token') },
       previewPath: '',
       previewVisible: false,
     }

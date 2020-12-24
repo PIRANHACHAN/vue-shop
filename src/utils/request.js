@@ -5,7 +5,9 @@ import 'nprogress/nprogress.css'
 
 // 创建一个axios的对象
 const $http = axios.create({
-  baseURL: 'http://api.piranhachan.top/api/private/v1/',
+  baseURL: 'https://api.piranhachan.top/api/private/v1/',
+  // baseURL: 'http://111.231.241.139:8889/api/private/v1/',
+  // baseURL: '/api',
   // baseURL: 'http://127.0.0.1:8888/api/private/v1/',
   timeout: 8000,
 })
@@ -16,7 +18,7 @@ $http.interceptors.request.use(
     // 页面顶端进度条
     Nprogress.start()
 
-    config.headers['authorization'] = window.sessionStorage.getItem('token')
+    config.headers['Authorization'] = window.sessionStorage.getItem('token')
     return config
   },
   (error) => {

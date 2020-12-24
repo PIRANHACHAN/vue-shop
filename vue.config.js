@@ -1,4 +1,19 @@
 module.exports = {
+  // 托管到gitee需要设置publicPath
+  // publicPath: process.env.NODE_ENV === 'production' ? '/piranhachan/' : '',
+  /* devServer: {
+    proxy: {
+      '/api': {
+        target: 'http://api.piranhachan.top/api/private/v1/',
+        // target: 'http://111.231.241.139:8889/api/private/v1/',
+        changeOrigin: true,
+        ws: true,
+        pathRewrite: {
+          '^/api': '',
+        },
+      },
+    },
+  }, */
   chainWebpack: (config) => {
     config.when(process.env.NODE_ENV === 'production', (config) => {
       config
